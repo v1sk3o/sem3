@@ -190,9 +190,7 @@ ostream& operator<< (ostream& ustream, Graph& obj)
 	{
 		ustream << obj.nodes.size() << endl;
 		for (set<int>::iterator it = obj.nodes.begin(); it != obj.nodes.end(); it++)
-		{
 			ustream << *it << " ";
-		}
 		ustream << endl;
 		for (set<int>::iterator it = obj.nodes.begin(); it != obj.nodes.end(); it++)
 		{
