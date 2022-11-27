@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <list>
 
 using namespace std;
@@ -82,6 +82,7 @@ ostream& operator<< (ostream& stream, Node<KeyTy, ValTy>& N)
 	stream << "\nKey: " << N.getKey() << "; Value: " << N.getValue() << "; Height: " << N.getHeight();
 	return stream;
 }
+
 template<class KeyTy, class ValTy>
 void print(Node<KeyTy, ValTy>* N) { cout << "\nKey: " << N->getKey() << "; Value: " << N->getValue() << "; Height: " << N->getHeight(); }
 
@@ -92,15 +93,82 @@ class TreeIterator : public std::iterator<std::input_iterator_tag, ValTy>
 {
 private:
 	Node<KeyTy, ValTy>* ptr;
-public:
-	TreeIterator() { ptr = NULL; }
-	TreeIterator(Node<KeyTy, ValTy>* p) { ptr = p; }
-	TreeIterator(const TreeIterator& it) { ptr = it.ptr; }
 
-	TreeIterator& operator=(const TreeIterator& it) { ptr = it.ptr; return *this; }
+	Node<KeyTy, ValTy>* root;
+
+	Node<KeyTy, ValTy>* tMax;
+	
+	Node<KeyTy, ValTy>* tMin;
+
+
+	Node<KeyTy, ValTy>* getRoot()
+	{
+		Node<KeyTy, ValTy>* localPtr = ptr;
+		while (localPtr->getParent() != NULL)
+			localPtr = localPtr->getParent();
+		return localPtr;
+	}
+
+	Node<KeyTy, ValTy>* getMax()
+	{
+		Node<KeyTy, ValTy>* localPtr = root;
+		while (localPtr->getRight() != NULL)
+			localPtr = localPtr->getRight();
+		return localPtr;
+	}
+
+	Node<KeyTy, ValTy>* getMin()
+	{
+		Node<KeyTy, ValTy>* localPtr = root;
+		while (localPtr->getLeft() != NULL)
+			localPtr = localPtr->getLeft();
+		return localPtr;
+	}
+
+public:
+	TreeIterator() 
+	{
+		ptr = NULL;
+	}
+	
+	TreeIterator(Node<KeyTy, ValTy>* p)
+	{
+		ptr = p;
+		if (ptr)
+		{
+			root = getRoot();
+			tMax = getMax();
+			tMin = getMin();
+		}
+
+	}
+	
+	TreeIterator(const TreeIterator& it)
+	{
+		ptr = it.ptr;
+		if (ptr)
+		{
+			root = it.root;
+			tMax = it.tMax;
+			tMin = it.tMin;
+		}
+
+	}
+
+	TreeIterator& operator=(const TreeIterator& it)
+	{
+		ptr = it.ptr;
+		root = it.root;
+		tMax = it.tMax;
+		tMin = it.tMin;
+
+		return *this;
+	}
+	
 	TreeIterator& operator=(Node<KeyTy, ValTy>* p) { ptr = p; return *this; }
 
 	bool operator!=(TreeIterator const& other) const { return ptr != other.ptr; }
+	
 	bool operator==(TreeIterator const& other) const { return ptr == other.ptr; }
 
 	Node<KeyTy, ValTy>& operator*()
@@ -109,12 +177,19 @@ public:
 			throw NullIteratorException("Error: Iterator is empty");
 		return *ptr;
 	}
-	
+
 	TreeIterator& operator++()
 	{
-		if (ptr == NULL)
-			throw NullIteratorException("Error: Iterator is empty");
-		else
+		//if (ptr == NULL)
+			//throw NullIteratorException("Error: Iterator is empty");
+
+		if (ptr == tMax)
+		{
+			ptr = NULL;
+			return *this;
+		}
+
+		if (ptr != NULL)
 		{
 			if (ptr->getRight() != NULL)
 			{
@@ -136,15 +211,22 @@ public:
 			}
 			return *this;
 		}
+
 	}
+
 	TreeIterator& operator++(int v)
 	{
-		if (ptr == NULL)
-			throw NullIteratorException("Error: Iterator is empty");
 		return this->operator++();
 	}
+
 	TreeIterator& operator--()
 	{
+		if (ptr == tMin)
+		{
+			ptr = NULL;
+			return *this;
+		}
+
 		if (ptr != NULL)
 		{
 			if (ptr->getLeft() != NULL)
@@ -165,15 +247,13 @@ public:
 				if (current->getKey() <= value)
 					ptr = current;
 			}
-			return *this;
 		}
+		return *this;
 
-		throw NullIteratorException("Error: Iterator is empty");
 	}
+
 	TreeIterator& operator--(int v)
 	{
-		if (ptr == NULL)
-			throw NullIteratorException("Error: Iterator is empty");
 		return this->operator--();
 	}
 };
@@ -185,7 +265,7 @@ class Tree
 {
 protected:
 	Node<KeyTy, ValTy>* root;
-	
+
 	virtual void fixHeight(Node<KeyTy, ValTy>* p)
 	{
 		int hl = 0;
@@ -221,9 +301,9 @@ protected:
 		{
 			if (Current->getRight() != NULL)
 				push_R(N, Current->getRight());
-			else 
+			else
 				Current->setRight(N);
-				N->setParent(Current);
+			N->setParent(Current);
 		}
 		if (Current->getKey() == N->getKey());
 
@@ -370,7 +450,7 @@ protected:
 
 		if (Current->getKey() < key) return Find_RKey(key, Current->getRight());
 	}
-	
+
 	virtual Node<KeyTy, ValTy>* Find_RValue(ValTy value, Node<KeyTy, ValTy>* Current)
 	{
 		if (Current == NULL) return NULL;
@@ -415,7 +495,7 @@ public:
 
 	virtual Node<KeyTy, ValTy>* Min(Node<KeyTy, ValTy>* Current = NULL)
 	{
-		if (root == NULL) 
+		if (root == NULL)
 			return NULL;
 
 		if (Current == NULL)
@@ -488,13 +568,15 @@ class IteratedTree : public Tree<KeyTy, ValTy>
 public:
 	IteratedTree<KeyTy, ValTy>() : Tree<KeyTy, ValTy>() {}
 	TreeIterator<KeyTy, ValTy> begin() { TreeIterator<KeyTy, ValTy> b = Tree<KeyTy, ValTy>::Min();  return b; }
-	TreeIterator<KeyTy, ValTy> end() { TreeIterator<KeyTy, ValTy> e = Tree<KeyTy, ValTy>::Max(); return e; }
+	TreeIterator<KeyTy, ValTy> rbegin() { return NULL; }
+	TreeIterator<KeyTy, ValTy> end() { return NULL; }
+	TreeIterator<KeyTy, ValTy> rend() { TreeIterator<KeyTy, ValTy> b = Tree<KeyTy, ValTy>::Max(); return b; }
 };
 
 
 
 template<class KeyTy, class ValTy>
-class AVL_Tree : public IteratedTree<KeyTy, ValTy>
+class AVLTree : public IteratedTree<KeyTy, ValTy>
 {
 protected:
 	int bfactor(Node<KeyTy, ValTy>* p)
@@ -533,8 +615,7 @@ protected:
 		}
 		p->setLeft(q->getRight());
 		q->setRight(p);
-		if (p->getParent() != NULL)
-			q->setParent(p->getParent());
+		q->setParent(p->getParent());
 		p->setParent(q);
 		if (p->getLeft() != NULL)
 			p->getLeft()->setParent(p);
@@ -542,7 +623,7 @@ protected:
 		fixHeight(q);
 		return q;
 	}
-		
+	
 	Node<KeyTy, ValTy>* RotateLeft(Node<KeyTy, ValTy>* q)
 	{
 		Node<KeyTy, ValTy>* p = q->getRight();
@@ -557,8 +638,7 @@ protected:
 		}
 		q->setRight(p->getLeft());
 		p->setLeft(q);
-		if (q->getParent() != NULL)
-			p->setParent(q->getParent());
+		p->setParent(q->getParent());
 		q->setParent(p);
 		if (q->getRight() != NULL)
 			q->getRight()->setParent(q);
@@ -589,7 +669,7 @@ protected:
 			return RotateRight(p);
 		}
 
-		return p; // балансировка не нужна
+		return p;
 	}
 
 	virtual Node<KeyTy, ValTy>* push_R(Node<KeyTy, ValTy>* N, Node<KeyTy, ValTy>* Current)
@@ -599,17 +679,17 @@ protected:
 			return Balance(Current);
 		return pushedNode;
 	}
-
+	
 	virtual Node<KeyTy, ValTy>* Remove_R(Node<KeyTy, ValTy>* N, Node<KeyTy, ValTy>* Current)
 	{
-		Node<KeyTy, ValTy>* removedNode = Tree<KeyTy, ValTy>::Remove_R(N, Current);
+		Node<KeyTy, ValTy>* RemoveNode = Tree<KeyTy, ValTy>::Remove_R(N, Current);
 		if (Current != NULL)
 			return Balance(Current);
-		return removedNode;
+		return RemoveNode;
 	}
 
 public:
-	AVL_Tree<KeyTy, ValTy>() : IteratedTree<KeyTy, ValTy>() {}
+	AVLTree<KeyTy, ValTy>() : IteratedTree<KeyTy, ValTy>() {}
 
 	virtual Node<KeyTy, ValTy>* push(Node<KeyTy, ValTy>* N)
 	{
@@ -631,17 +711,15 @@ public:
 		N->setValue(v);
 		return Remove(N);
 	}
-
+	
 	virtual Node<KeyTy, ValTy>* Remove(Node<KeyTy, ValTy>* N)
 	{
 		return Remove_R(N, Tree<KeyTy, ValTy>::root);
 	}
-
-	template<class T, class T1> friend ostream& operator<< (ostream& stream, AVL_Tree<KeyTy, ValTy>& N);
 };
 
 template<class KeyTy, class ValTy>
-ostream& operator<< (ostream& stream, AVL_Tree<KeyTy, ValTy>& N)
+ostream& operator<< (ostream& stream, AVLTree<KeyTy, ValTy>& N)
 {
 	TreeIterator<KeyTy, ValTy> it = N.begin();
 	while (it != N.end())
@@ -649,29 +727,25 @@ ostream& operator<< (ostream& stream, AVL_Tree<KeyTy, ValTy>& N)
 		stream << *it << " ";
 		it++;
 	}
-	stream << *it;
 	return stream;
 }
 
 
+
 template<class KeyTy, class ValTy>
-class MultiAVLTree : public AVL_Tree<KeyTy, ValTy>
+class AVLTreeMulti : public AVLTree<KeyTy, ValTy>
 {
 public:
-	MultiAVLTree<KeyTy, ValTy>() : AVL_Tree<KeyTy, ValTy>() {}
-	
+	AVLTreeMulti<KeyTy, ValTy>() : AVLTree<KeyTy, ValTy>() {}
+
 	list<ValTy> operator[](KeyTy k)
 	{
 		list<ValTy> res;
-		auto it = this->begin();
-		while (it != this->end())
+		for (auto it = this->begin(); it != this->end(); it++)
 		{
 			if ((*it).getKey() == k)
 				res.push_back((*it).getValue());
-			it++;
 		}
-		if ((*it).getKey() == k)
-			res.push_back((*it).getValue());
 		return res;
 	}
 
@@ -731,6 +805,8 @@ protected:
 	}
 };
 
+
+
 class AutoOwner
 {
 protected:
@@ -781,12 +857,26 @@ ostream& operator<<(ostream& s, const AutoOwner& A)
 
 int main()
 {
-	AVL_Tree<string, AutoOwner> A1;
+	AVLTree<string, AutoOwner> A1;
 	A1.push("A765HG89", { "Ekaterina", "Stepanova", "A765HG89", "13.08.1970", "78UN566347" });
 	A1.push("V049UI44", { "Dmitriy", "Litnikov", "V049UI44", "09.04.1975", "99UN365397" });
 	A1.push("R129PO09", { "Yan", "Lubek", "R129PO09", "24.11.1989", "65UN886142" });
-	
-	cout << "AutoOwners AVLTree:" << A1;
+
+	cout << "AutoOwners AVLTree:";
+	TreeIterator<string, AutoOwner> it1 = A1.begin();
+	while (it1 != A1.end())
+	{
+		cout << *it1 << " ";
+		it1++;
+	}
+
+	cout << "\n\nAutoOwners AVLTree (reversed):";
+	TreeIterator<string, AutoOwner> it2 = A1.rend();
+	while (it2 != A1.rbegin())
+	{
+		cout << *it2 << " ";
+		it2--;
+	}
 
 	cout << "\n\nFind object (value = { 'Yan', 'Lubek', 'R129PO09', '24.11.1989', '65UN886142' }): ";
 	A1.Find_V({ "Yan", "Lubek", "R129PO09", "24.11.1989", "65UN886142" })->print();
@@ -796,7 +886,7 @@ int main()
 
 	cout << "\n\nFind minimum:";
 	A1.Min()->print();
-	
+
 	cout << "\n\nFind maximum:";
 	A1.Max()->print();
 
@@ -808,7 +898,7 @@ int main()
 	A1.Remove("A789BC77", { "Ivan", "Ivanov", "A789BC77", "31.12.1989", "87UN879999" });
 	cout << A1;
 
-	MultiAVLTree<string, AutoOwner> A2;
+	AVLTreeMulti<string, AutoOwner> A2;
 	A2.push("A765HG89", { "Ekaterina", "Stepanova", "A765HG89", "13.08.1970", "78UN566347" });
 	A2.push("V049UI44", { "Dmitriy", "Litnikov", "V049UI44", "09.04.1975", "99UN365397" });
 	A2.push("V049UI44", { "Daniil", "Sitnikov", "V049UI44", "12.09.1986", "19UN378891" });
