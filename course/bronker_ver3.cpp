@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <algorithm>
 #include <vector>
 #include <set>
@@ -20,7 +20,7 @@ protected:
 	{
 		if (P.size() == 0 && X.size() == 0)
 		{
-			if (R.size() > 2)
+			//if (R.size() > 2)
 				cliques.push_back(set<int>(R));
 		}
 
@@ -46,7 +46,7 @@ protected:
 	{
 		if (P.size() == 0 && X.size() == 0)
 		{
-			if(R.size() > 2)
+			//if(R.size() > 2)
 				cliques.push_back(set<int>(R));
 		}
 
@@ -128,6 +128,8 @@ public:
 		{
 			nodes.erase(index);
 			adjacentList.erase(index);
+			for (set<int>::iterator it = nodes.begin(); it != nodes.end(); it++)
+				adjacentList[*it].erase(index);
 		}
 	}
 
@@ -190,7 +192,7 @@ public:
 	vector<set<int>> allCliquesWOP()
 	{
 		vector<set<int>> cliques;
-		if (this->nodes.size() > 2)
+		if (nodes.size() > 0)
 		{
 			set<int> R;
 			set<int> P = set<int>(nodes);
@@ -203,7 +205,7 @@ public:
 	vector<set<int>> allCliquesWP()
 	{
 		vector<set<int>> cliques;
-		if (this->nodes.size() > 2)
+		if (nodes.size() > 0)
 		{
 			set<int> R;
 			set<int> P = set<int>(nodes);
@@ -215,8 +217,8 @@ public:
 
 	Graph operator=(const Graph g)
 	{
-		this->nodes = g.nodes;
-		this->adjacentList = g.adjacentList;
+		nodes = g.nodes;
+		adjacentList = g.adjacentList;
 		return *this;
 	}
 
