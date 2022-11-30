@@ -19,10 +19,7 @@ protected:
 	void bronKerboschWOP(set<int> R, set<int> P, set<int> X, vector<set<int>>& cliques)
 	{
 		if (P.size() == 0 && X.size() == 0)
-		{
-			//if (R.size() > 2)
-				cliques.push_back(set<int>(R));
-		}
+			cliques.push_back(set<int>(R));
 
 		set<int>::iterator it = P.begin();
 		while (it != P.end())
@@ -45,10 +42,7 @@ protected:
 	void bronKerboschWP(set<int> R, set<int> P, set<int> X, vector<set<int>>& cliques)
 	{
 		if (P.size() == 0 && X.size() == 0)
-		{
-			//if(R.size() > 2)
-				cliques.push_back(set<int>(R));
-		}
+			cliques.push_back(set<int>(R));
 
 		int counter = 0, u = 0;
 		for (set<int>::iterator it = P.begin(); it != P.end(); it++)
