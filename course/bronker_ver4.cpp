@@ -4,7 +4,6 @@
 #include <set>
 #include <map>
 #include <fstream>
-#include <string>
 #include <time.h>
 #include <chrono>
 
@@ -260,22 +259,21 @@ istream& operator>> (istream& ustream, Graph& obj)
 		ustream >> nSize;
 		for (int i = 0; i < nSize; i++)
 		{
-			int n;
-			ustream >> n;
-			obj.addNode(n);
+			int node;
+			ustream >> node;
+			obj.addNode(node);
 		}
 
-		set<int>::iterator it1 = obj.nodes.begin();
-		for (int i = 0; i < nSize && it1 != obj.nodes.end(); i++, it1++)
+		for (set<int>::iterator it = obj.nodes.begin(); it != obj.nodes.end(); it++)
 		{
-			int num;
-			ustream >> num;
+			int adjSize;
+			ustream >> adjSize;
 
-			for (int j = 0; j < num; j++)
+			for (int j = 0; j < adjSize; j++)
 			{
-				int n;
-				ustream >> n;
-				obj.addEdge((*it1), n);
+				int node;
+				ustream >> node;
+				obj.addEdge((*it), node);
 			}
 		}
 		return ustream;
@@ -292,10 +290,10 @@ istream& operator>> (istream& ustream, Graph& obj)
 
 		for (int i = 0; i < nSize; i++)
 		{
-			int n;
-			ustream >> n;
+			int node;
+			ustream >> node;
 
-			obj.addEdge((*it), n);
+			obj.addEdge((*it), node);
 		}
 	}
 }
@@ -421,7 +419,7 @@ int main()
 	cout << "\nEnter new file name to save your graph into: ";
 	string s3;
 	cin >> s3;
-	ofstream savefile(s2 + ".txt");
+	ofstream savefile(s3 + ".txt");
 	savefile << g;
 	savefile.close();
 	cout << "Graph was successfully saved to '" + s3 + ".txt'!\n";
