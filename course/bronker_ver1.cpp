@@ -4,8 +4,6 @@
 #include <set>
 #include <map>
 #include <fstream>
-#include <time.h>
-#include <chrono>
 
 using namespace std;
 
@@ -13,133 +11,129 @@ class Graph
 {
 protected:
 	set<int> nodes;
-
 	map<int, set<int>> adjacentList;
 
-	void bronKerboschWOP(set<int> R, set<int> P, set<int> X, vector<set<int>>& cliques)
+	void bronKerbosch(set<int> R, set<int> P, set<int> X, vector<set<int>>& cliques)
 	{
 		if (P.size() == 0 && X.size() == 0)
-			cliques.push_back(set<int>(R));
+		{
+			bool occup = false;
+			for (int i = 0; i < cliques.size(); ++i)
+			{
+				if (cliques[i].size() == R.size())
+				{
+					bool areSame = true;
+					set<int>::iterator it1, it2;
+					for (it1 = cliques[i].begin(), it2 = R.begin(); it1 != cliques[i].end() && it2 != R.end(); it1++, it2++)
+					{
+						if ((*it1) != (*it2))
+						{
+							areSame = false;
+							break;
+						}
+					}
+
+					if (areSame)
+					{
+						occup = true;
+						break;
+					}
+				}
+			}
+
+			if (!occup)
+				cliques.push_back(set<int>(R));
+		}
 
 		set<int>::iterator it = P.begin();
 		while (it != P.end())
 		{
-			int v = *it++;
+			int u = *it;
+			it++;
 
-			set<int> N = getNeighbours(v), R2 = set<int>(R), X2, P2;
+			set<int> N = getNeighbours(u);
+			set<int> R2 = set<int>(R);
+			set<int> X2;
+			set<int> P2;
 
-			R2.insert(v);
+			P.erase(u);
+			R2.insert(u);
 			set_intersection(P.begin(), P.end(), N.begin(), N.end(), inserter(P2, P2.begin()));
 			set_intersection(X.begin(), X.end(), N.begin(), N.end(), inserter(X2, X2.begin()));
-			bronKerboschWOP(R2, P2, X2, cliques);
+			bronKerbosch(R2, P2, X2, cliques);
 
-			P.erase(v);
-			X.insert(v);
+			set<int> P3;
+			set<int> singleton = { u };
+			set_difference(P2.begin(), P2.end(), singleton.begin(), singleton.end(), inserter(P3, P3.begin()));
+			X.insert(u);
 		}
 	}
-
-	void bronKerboschWP(set<int> R, set<int> P, set<int> X, vector<set<int>>& cliques)
-	{
-		if (P.size() == 0 && X.size() == 0)
-			cliques.push_back(set<int>(R));
-
-		int counter = 0, u = 0;
-		for (set<int>::iterator it = P.begin(); it != P.end(); it++)
-		{
-			if (counter < (getNeighbours(*it).size()))
-			{
-				counter = getNeighbours(*it).size();
-				u = *it;
-			}
-		}
-
-		set<int> Nu = getNeighbours(u), PNu;
-		set_difference(P.begin(), P.end(), Nu.begin(), Nu.end(), inserter(PNu, PNu.begin()));
-
-		set<int>::iterator it = PNu.begin();
-		while (it != PNu.end())
-		{
-			int v = *it++;
-
-			set<int> Nv = getNeighbours(v), R2 = set<int>(R), X2, P2;
-
-			R2.insert(v);
-			set_intersection(P.begin(), P.end(), Nv.begin(), Nv.end(), inserter(P2, P2.begin()));
-			set_intersection(X.begin(), X.end(), Nv.begin(), Nv.end(), inserter(X2, X2.begin()));
-			bronKerboschWP(R2, P2, X2, cliques);
-
-			P.erase(v);
-			X.insert(v);
-		}
-	}
-
 
 public:
-	Graph(int size = 0)
+	Graph() { }
+
+	Graph(int size)
 	{
 		for (int i = 0; i < size; i++)
-			addNode(i);
-	}
-
-	Graph(const Graph& g)
-	{
-		nodes = g.nodes;
-		adjacentList = g.adjacentList;
+		{
+			nodes.insert(i);
+			adjacentList.insert(make_pair(i, set<int>()));
+		}
 	}
 
 	~Graph() { }
 
 	void addNode(int index)
 	{
-		if (nodes.find(index) == nodes.end())
-		{
-			nodes.insert(index);
-			adjacentList.insert(make_pair(index, set<int>()));
-		}
+		if (nodes.find(index) != nodes.end())
+			return;
+		nodes.insert(index);
+		adjacentList.insert(make_pair(index, set<int>()));
 	}
 
 	void addEdge(int node1, int node2)
 	{
-		if (nodes.find(node1) != nodes.end() && nodes.find(node2) != nodes.end() && node1 != node2)
-		{
-			if (adjacentList.find(node1) == adjacentList.end())
-				adjacentList.insert(make_pair(node1, set<int>()));
-			else
-				adjacentList.find(node1)->second.insert(node2);
+		if (nodes.find(node1) == nodes.end() || nodes.find(node2) == nodes.end())
+			return;
 
-			if (adjacentList.find(node2) == adjacentList.end())
-				adjacentList.insert(make_pair(node2, set<int>()));
-			else
-				adjacentList.find(node2)->second.insert(node1);
-		}
+
+		if (adjacentList.find(node1) == adjacentList.end())
+			adjacentList.insert(make_pair(node1, set<int>()));
+		else 
+			adjacentList.find(node1)->second.insert(node2);
+
+
+		if (adjacentList.find(node2) == adjacentList.end())
+			adjacentList.insert(make_pair(node2, set<int>()));
+		else
+			adjacentList.find(node2)->second.insert(node1);
 	}
 
 	void delNode(int index)
 	{
-		if (nodes.find(index) != nodes.end())
-		{
-			nodes.erase(index);
-			adjacentList.erase(index);
-			for (set<int>::iterator it = nodes.begin(); it != nodes.end(); it++)
-				adjacentList[*it].erase(index);
-		}
+		if (nodes.find(index) == nodes.end())
+			return;
+		nodes.erase(index);
+		adjacentList.erase(index);
 	}
 
 	void delEdge(int node1, int node2)
 	{
-		if (nodes.find(node1) != nodes.end() && nodes.find(node2) != nodes.end() && node1 != node2)
-		{
-			if (adjacentList.find(node1) != adjacentList.end())
-				adjacentList[node1].erase(node2);
+		if (nodes.find(node1) == nodes.end() || nodes.find(node2) == nodes.end())
+			return;
 
-			if (adjacentList.find(node2) != adjacentList.end())
-				adjacentList[node2].erase(node1);
-		}
+		if (adjacentList.find(node1) != adjacentList.end())
+			adjacentList[node1].erase(node2);
+
+
+		if (adjacentList.find(node2) != adjacentList.end())
+			adjacentList[node2].erase(node1);
 	}
+
 
 	bool areAdjacent(int node1, int node2)
 	{
-		return adjacentList[node1].find(node2) != adjacentList[node1].end();
+		return  adjacentList[node1].find(node2) != adjacentList[node1].end() ? true : false;
 	}
 
 	set<int> getNeighbours(int index)
@@ -165,56 +159,28 @@ public:
 		return count / 2;
 	}
 
-	void random()
+	vector<set<int>> allCliques()
+	{
+		vector<set<int>> cliques;
+		set<int> R;
+		set<int> P = set<int>(nodes);
+		set<int> X;
+		bronKerbosch(R, P, X, cliques);
+		return cliques;
+	}
+
+	void print()
 	{
 		for (set<int>::iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
-			for (set<int>::iterator it2 = nodes.begin(); it2 != nodes.end(); it2++)
-			{
-				if (!areAdjacent(*it, *it2))
-				{
-					if (rand() % 2)
-						addEdge(*it, *it2);
-				}
-			}
+			cout << *it << " --> ";
+			for (set<int>::iterator it2 = adjacentList[(*it)].begin(); it2 != adjacentList[(*it)].end(); it2++)
+				cout << *it2 << " ";
+			cout << endl;
 		}
-	}
-
-	vector<set<int>> allCliquesWOP()
-	{
-		vector<set<int>> cliques;
-		if (nodes.size() > 0)
-		{
-			set<int> R;
-			set<int> P = set<int>(nodes);
-			set<int> X;
-			bronKerboschWOP(R, P, X, cliques);
-		}
-		return cliques;
-	}
-
-	vector<set<int>> allCliquesWP()
-	{
-		vector<set<int>> cliques;
-		if (nodes.size() > 0)
-		{
-			set<int> R;
-			set<int> P = set<int>(nodes);
-			set<int> X;
-			bronKerboschWP(R, P, X, cliques);
-		}
-		return cliques;
-	}
-
-	Graph operator=(const Graph g)
-	{
-		nodes = g.nodes;
-		adjacentList = g.adjacentList;
-		return *this;
 	}
 
 	friend ostream& operator<< (ostream& ustream, Graph& obj);
-
 	friend istream& operator>> (istream& ustream, Graph& obj);
 };
 
@@ -239,13 +205,8 @@ ostream& operator<< (ostream& ustream, Graph& obj)
 	for (set<int>::iterator it = obj.nodes.begin(); it != obj.nodes.end(); it++)
 	{
 		ustream << *it << " --> ";
-		if (obj.adjacentList[(*it)].size() != 0)
-		{
-			for (set<int>::iterator it2 = obj.adjacentList[(*it)].begin(); it2 != obj.adjacentList[(*it)].end(); it2++)
-				ustream << *it2 << " ";
-		}
-		else
-			ustream << "None ";
+		for (set<int>::iterator it2 = obj.adjacentList[(*it)].begin(); it2 != obj.adjacentList[(*it)].end(); it2++)
+			ustream << *it2 << " ";
 		ustream << endl;
 	}
 	return ustream;
@@ -257,182 +218,77 @@ istream& operator>> (istream& ustream, Graph& obj)
 	{
 		int nSize;
 		ustream >> nSize;
+
 		for (int i = 0; i < nSize; i++)
 		{
-			int node;
-			ustream >> node;
-			obj.addNode(node);
+			int n;
+			ustream >> n;
+			obj.addNode(n);
 		}
 
-		for (set<int>::iterator it = obj.nodes.begin(); it != obj.nodes.end(); it++)
+		set<int>::iterator it1 = obj.nodes.begin();
+		for (int i = 0; i < nSize, it1!=obj.nodes.end(); i++, it1++)
 		{
-			int adjSize;
-			ustream >> adjSize;
+			int num;
+			ustream >> num;
 
-			for (int j = 0; j < adjSize; j++)
+			for (int j = 0; j < num; j++)
 			{
-				int node;
-				ustream >> node;
-				obj.addEdge((*it), node);
+				int n;
+				ustream >> n;
+				obj.addEdge((*it1), n);
 			}
 		}
 		return ustream;
 	}
-
-	for (set<int>::iterator it = obj.nodes.begin(); it != obj.nodes.end(); it++)
-	{
-		cout << *it << ": ";
-		int nSize;
-		ustream >> nSize;
-
-		if (nSize > obj.nodes.size() - 1)
-			nSize = obj.nodes.size() - 1;
-
-		for (int i = 0; i < nSize; i++)
-		{
-			int node;
-			ustream >> node;
-
-			obj.addEdge((*it), node);
-		}
-	}
 }
-
 
 
 int main()
 {
-	srand(time(NULL));
+	Graph g;
+	g.addNode(0);
+	g.addNode(1);
+	g.addNode(2);
+	g.addNode(3);
+	g.addNode(4);
+	g.addNode(10);
 
-	cout << "Enter number of vertexes in your graph: ";
-	int size;
-	cin >> size;
-	while (size <= 0)
-	{
-		cout << "Please enter number > 0. Try again!\n";
-		cin >> size;
-	}
 
-	Graph g(size);
-	cout << "\nWhould you like to make random edges or to enter them yourself?\n1 - Random / 2 - Enter yourself\n";
-	string s1 = " ";
-	while (s1 != "1" && s1 != "2")
-	{
-		cin >> s1;
-		if (s1 == "1")
-			g.random();
-		else if (s1 == "2")
-		{
-			cout << "\nEnter number of neighbours and each neighbour for each vertex: \nExample: <vertex_number>: <number_of_its_neighbours> <nieghbour1> <neighbour2> ...\n";
-			cin >> g;
-		}
-		else
-			cout << "There is no such variant! Please try again.\n";
-	}
+	g.addEdge(0, 1);
+	g.addEdge(0, 2);
+	g.addEdge(1, 2);
+	g.addEdge(1, 3);
+	g.addEdge(2, 3);
+	g.addEdge(2, 10);
+	g.addEdge(3, 4);
+	g.addEdge(10, 4);
+	g.addEdge(3, 10);
+	g.addEdge(0, 10);
+	g.addEdge(0, 3);
+	g.addEdge(2, 4);
 
-	cout << "\nYour graph vertexes and their neighbours: \n";
+	cout << "Your graph vertexes and their neighbours:\n";
 	cout << g;
-	cout << "\nWhat variant of Bron-Kerbosch algorithm would you like to choose to find all cliques from your graph?\n1 - Without pivoting / 2 - With pivoting\n";
-	if (size > 29 && g.getNumOfEdges() > 200)
-		cout << "Attention: amount of vertexes and edges is too big! It may take more than 20s to complete Bron-Kerbosch algorithm.\n";
-	s1 = " ";
-	vector<set<int>> v;
-	chrono::duration<double, std::milli> elapsed_ms;
-	while (s1 != "1" && s1 != "2")
+
+	cout << "\nAll cliques:\n";
+	vector<set<int>> c = g.allCliques();
+	for (int i = 0; i < c.size(); i++)
 	{
-		cin >> s1;
-		if (s1 == "1")
-		{
-			auto begin = chrono::steady_clock::now();
-			v = g.allCliquesWOP();
-			auto end = std::chrono::steady_clock::now();
-			elapsed_ms = end - begin;
-		}
-		else if (s1 == "2")
-		{
-			auto begin = chrono::steady_clock::now();
-			v = g.allCliquesWP();
-			auto end = chrono::steady_clock::now();
-			elapsed_ms = end - begin;
-		}
-		else
-			cout << "There is no such variant! Please try again.\n";
+		cout << "{ ";
+		for (auto x : c[i])
+			cout << x << " ";
+		cout << "} ";
 	}
 
-	if (v.size() != 0)
-	{
-		cout << "\nAll cliques from your graph: ";
-		for (int i = 0; i < v.size(); i++)
-		{
-			cout << "{ ";
-			for (auto x : v[i])
-				cout << x << " ";
-			cout << "}; ";
-		}
-		cout << "\nTime consumed: " << elapsed_ms.count() << " ms\n";
-	}
-	else
-		cout << "\nYour graph does not have any cliques.\n";
+	cout << endl << endl << "Saving into file 'test.txt' and reading from there:";
+	ofstream file("test.txt");
+	file << g;
+	file.close();
 
-	cout << "\nWould you like to test another variant of Bron-Kerbosch algorithm?\n1 - Yes / 2 - No\n";
-	string s2 = " ";
-	while (s2 != "1" && s2 != "2")
-	{
-		cin >> s2;
-		if (s2 == "1")
-		{
-			if (s1 == "1")
-			{
-				auto begin = chrono::steady_clock::now();
-				v = g.allCliquesWP();
-				auto end = std::chrono::steady_clock::now();
-				elapsed_ms = end - begin;
-			}
-			else if (s1 == "2")
-			{
-				auto begin = chrono::steady_clock::now();
-				v = g.allCliquesWOP();
-				auto end = chrono::steady_clock::now();
-				elapsed_ms = end - begin;
-			}
-			if (v.size() != 0)
-			{
-				cout << "\nAll cliques from your graph: ";
-				for (int i = 0; i < v.size(); i++)
-				{
-					cout << "{ ";
-					for (auto x : v[i])
-						cout << x << " ";
-					cout << "}; ";
-				}
-				cout << "\nTime consumed: " << elapsed_ms.count() << " ms\n";
-			}
-			else
-				cout << "\nYour graph does not have any cliques.\n";
-		}
-		else if (s2 == "2")
-			break;
-		else
-			cout << "There is no such variant! Please try again.\n";
-	}
-
-	cout << "\nEnter new file name to save your graph into: ";
-	string s3;
-	cin >> s3;
-	ofstream savefile(s3 + ".txt");
-	savefile << g;
-	savefile.close();
-	cout << "Graph was successfully saved to '" + s3 + ".txt'!\n";
-
-	cout << "\nTrying to open your saved file...\n";
-	ifstream openfile(s3 + ".txt");
-	if (openfile.is_open())
-	{
-		Graph g2;
-		openfile >> g2;
-		openfile.close();
-		cout << "Graph from saved file '" + s3 + ".txt':\n" << g2;
-	}
-	else
-		cout << "File " + s3 + ".txt was corrupted.";
+	Graph f;
+	ifstream file1("test.txt");
+	file1 >> f;
+	file1.close();
+	cout << endl << f;
 }
