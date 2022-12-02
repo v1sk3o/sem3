@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <algorithm>
 #include <vector>
 #include <set>
@@ -348,7 +348,6 @@ int main()
 			auto begin = chrono::steady_clock::now();
 			v = g.allCliquesWOP();
 			auto end = std::chrono::steady_clock::now();
-			//elapsed_ms = chrono::duration_cast<chrono::microseconds>(end - begin);
 			elapsed_ms = end - begin;
 		}
 		else if (s1 == "2")
@@ -356,7 +355,6 @@ int main()
 			auto begin = chrono::steady_clock::now();
 			v = g.allCliquesWP();
 			auto end = chrono::steady_clock::now();
-			//elapsed_ms = chrono::duration_cast<chrono::microseconds>(end - begin);
 			elapsed_ms = end - begin;
 		}
 		else
@@ -371,7 +369,7 @@ int main()
 			cout << "{ ";
 			for (auto x : v[i])
 				cout << x << " ";
-			cout << "} ";
+			cout << "}; ";
 		}
 		cout << "\nTime consumed: " << elapsed_ms.count() << " ms\n";
 	}
@@ -399,6 +397,20 @@ int main()
 				auto end = chrono::steady_clock::now();
 				elapsed_ms = end - begin;
 			}
+			if (v.size() != 0)
+			{
+				cout << "\nAll cliques from your graph: ";
+				for (int i = 0; i < v.size(); i++)
+				{
+					cout << "{ ";
+					for (auto x : v[i])
+						cout << x << " ";
+					cout << "}; ";
+				}
+				cout << "\nTime consumed: " << elapsed_ms.count() << " ms\n";
+			}
+			else
+				cout << "\nYour graph does not have any cliques.\n";
 		}
 		else if (s2 == "2")
 			break;
@@ -406,28 +418,13 @@ int main()
 			cout << "There is no such variant! Please try again.\n";
 	}
 
-	if (v.size() != 0)
-	{
-		cout << "\nAll cliques from your graph: ";
-		for (int i = 0; i < v.size(); i++)
-		{
-			cout << "{ ";
-			for (auto x : v[i])
-				cout << x << " ";
-			cout << "} ";
-		}
-		cout << "\nTime consumed: " << elapsed_ms.count() << " ms";
-	}
-	else
-		cout << "\nYour graph does not have any cliques.\n";
-
-	cout << "\n\nEnter new file name to save your graph into: ";
+	cout << "\nEnter new file name to save your graph into: ";
 	string s3;
 	cin >> s3;
 	ofstream savefile(s2 + ".txt");
 	savefile << g;
 	savefile.close();
-	cout << "Graph was successfully saved to " + s3 + ".txt!\n";
+	cout << "Graph was successfully saved to '" + s3 + ".txt'!\n";
 
 	cout << "\nTrying to open your saved file...\n";
 	ifstream openfile(s3 + ".txt");
@@ -435,7 +432,7 @@ int main()
 	{
 		Graph g2;
 		openfile >> g2;
-		cout << "Graph from saved file:\n" << g2;
+		cout << "Graph from saved file '" + s3 + ".txt':\n" << g2;
 	}
 	else
 		cout << "File " + s3 + ".txt was corrupted.";
