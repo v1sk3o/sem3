@@ -29,7 +29,6 @@ protected:
 
 			set<int> N = getNeighbours(v), R2 = set<int>(R), X2, P2;
 
-			P.erase(v);//
 			R2.insert(v);
 			set_intersection(P.begin(), P.end(), N.begin(), N.end(), inserter(P2, P2.begin()));
 			set_intersection(X.begin(), X.end(), N.begin(), N.end(), inserter(X2, X2.begin()));
@@ -65,7 +64,6 @@ protected:
 
 			set<int> Nv = getNeighbours(v), R2 = set<int>(R), X2, P2;
 
-			PNu.erase(v);
 			R2.insert(v);
 			set_intersection(P.begin(), P.end(), Nv.begin(), Nv.end(), inserter(P2, P2.begin()));
 			set_intersection(X.begin(), X.end(), Nv.begin(), Nv.end(), inserter(X2, X2.begin()));
