@@ -73,7 +73,6 @@ protected:
 		}
 	}
 
-
 public:
 	Graph(int size = 0)
 	{
