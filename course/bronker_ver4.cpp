@@ -432,6 +432,7 @@ int main()
 	{
 		Graph g2;
 		openfile >> g2;
+		openfile.close();
 		cout << "Graph from saved file '" + s3 + ".txt':\n" << g2;
 	}
 	else
