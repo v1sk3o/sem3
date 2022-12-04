@@ -43,12 +43,12 @@ protected:
 		if (P.size() == 0 && X.size() == 0)
 			cliques.push_back(set<int>(R));
 
-		int counter = 0, u = 0;
+		int adjCount = 0, u = 0;
 		for (set<int>::iterator it = P.begin(); it != P.end(); it++)
 		{
-			if (counter < (getNeighbours(*it).size()))
+			if (adjCount < (getNeighbours(*it).size()))
 			{
-				counter = getNeighbours(*it).size();
+				adjCount = getNeighbours(*it).size();
 				u = *it;
 			}
 		}
@@ -74,7 +74,7 @@ protected:
 	}
 
 public:
-	Graph(int size = 0)
+	Graph(int size = 1)
 	{
 		for (int i = 0; i < size; i++)
 			addNode(i);
