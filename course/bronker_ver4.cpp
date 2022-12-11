@@ -158,10 +158,14 @@ public:
 
 	int getNumOfEdges()
 	{
-		int count = 0;
+		int count1 = 0, count2 = 0, count3 = 0;
 		for (int i = 0; i < adjacentList.size(); i++)
-			count += adjacentList[i].size();
-		return count / 2;
+		{
+			count1 += adjacentList[i].size();
+			count2 += adjacentList[i+1].size();
+			count3 += adjacentList[i+2].size();
+		}
+		return (count1 + count2 + count3) / 2;
 	}
 
 	void random()
